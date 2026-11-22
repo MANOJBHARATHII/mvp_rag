@@ -1,6 +1,20 @@
-# gitignore template for LangChain products, e.g., LangGraph, LangSmith
-# website: https://www.langchain.com/
-# website: https://www.langchain.com/langgraph
+# Environment and credentials
+.env
+.env.*
+!.env.example
 
-# LangGraph
+# Python-generated files
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+venv/
+
+# LangChain and RAG generated data
 .langgraph_api/
+chroma.db/
