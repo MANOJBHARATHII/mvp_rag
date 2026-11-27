@@ -1,12 +1,24 @@
 from config import engine, llm
+from langchain_google_genai._common import GoogleGenerativeAIError
 
 
 def knowledge_based_chat(query):
-    return engine.similarity_search(query, k=3)
+    try:
+        return engine.similarity_search(query, k=3)
+    except GoogleGenerativeAIError as error:
+        if "429" in str(error) or "RESOURCE_EXHAUSTED" in str(error):
+            raise RuntimeError(
+                "Gemini embedding quota is exhausted. "
+                "Wait for quota to reset, then run the query again."
+            ) from error
+        raise
 
 
 def chatbot(query):
     results = knowledge_based_chat(query)
+    if not results:
+        return "I could not find relevant information in the indexed documents."
+
     search_content = "\n\n".join(
         document.page_content for document in results
     )
@@ -27,7 +39,13 @@ Do not try to make up an answer."""
 
 
 if __name__ == "__main__":
-    response = chatbot(
-        "What is the difference between a virus and bacteria?"
-    )
-    print(response.content.encode("ascii", "replace").decode("ascii"))
+    try:
+        response = chatbot(
+            "What is the difference between a virus and bacteria?"
+        )
+        if hasattr(response, "content"):
+            print(response.content.encode("ascii", "replace").decode("ascii"))
+        else:
+            print(response)
+    except RuntimeError as error:
+        print(error)
